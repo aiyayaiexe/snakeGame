@@ -1,9 +1,8 @@
-
 using UnityEngine;
 
 public class FoodManager : MonoBehaviour
 {
-    public GameObject foodPrefab;
+    public GameObject[] foodPrefabs;   // element 0 = level 1, element 1 = level 2
     public SnakeMovement snake;
     public GameManager gameManager;
 
@@ -12,6 +11,7 @@ public class FoodManager : MonoBehaviour
     private GameObject currentFood;
     private int foodEaten = 0;
     private bool foodActive = false;
+    private int currentLevel = 1;
 
     void Update()
     {
@@ -31,10 +31,11 @@ public class FoodManager : MonoBehaviour
         }
     }
 
-    public void BeginFood(int amount)
+    public void BeginFood(int amount, int level)
     {
         StopFood();
 
+        currentLevel = level;
         targetFood = amount;
         foodEaten = 0;
         foodActive = true;
@@ -55,13 +56,23 @@ public class FoodManager : MonoBehaviour
 
     void SpawnFood()
     {
+        if (foodPrefabs == null || foodPrefabs.Length == 0)
+        {
+            Debug.LogError("FoodManager: assign Food Prefabs in the Inspector!");
+            return;
+        }
+
         int x = Random.Range(-7, 8);
         int z = Random.Range(-7, 8);
 
         Vector3 position = new Vector3(x * 2, 0.5f, z * 2);
 
+        // Pick the food prefab for the current level
+        GameObject prefab = foodPrefabs[
+            Mathf.Clamp(currentLevel - 1, 0, foodPrefabs.Length - 1)];
+
         currentFood = Instantiate(
-            foodPrefab, position, Quaternion.identity);
+            prefab, position, prefab.transform.rotation);
     }
 
     void EatFood()

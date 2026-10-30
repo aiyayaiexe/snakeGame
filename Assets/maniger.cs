@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -14,11 +13,20 @@ public class GameManager : MonoBehaviour
 
     public VideoPlayer videoPlayer;
 
-    public VideoClip level1Video;
-    public VideoClip level2Video;
-    public VideoClip finalVideo;
+    // File names of the videos inside Assets/StreamingAssets
+    public string level1VideoFile = "CutScene1_Final.mp4";
+    public string level2VideoFile = "Cutscene2_Final.mp4";
+    public string finalVideoFile = "CutScene3_Final.mp4";
 
     public int foodNeeded = 10;
+
+    // Background materials (one per level)
+    public Material[] levelBackgrounds;
+    public Renderer backgroundRenderer;
+
+    // Music
+    public AudioSource musicSource;   // plays all the time
+    public AudioSource deathSource;   // plays only when you die
 
     private int currentLevel = 0;
     private bool finalVideoPlaying = false;
@@ -34,11 +42,15 @@ public class GameManager : MonoBehaviour
         foodManager.StopFood();
 
         videoPlayer.loopPointReached += VideoFinished;
+        videoPlayer.prepareCompleted += VideoPrepared;
+        videoPlayer.errorReceived += VideoError;
     }
 
     void OnDestroy()
     {
         videoPlayer.loopPointReached -= VideoFinished;
+        videoPlayer.prepareCompleted -= VideoPrepared;
+        videoPlayer.errorReceived -= VideoError;
     }
 
     public void StartGame()
@@ -49,6 +61,16 @@ public class GameManager : MonoBehaviour
     void StartLevel(int level)
     {
         currentLevel = level;
+
+        // Stop the death song and bring the main music back
+        if (deathSource != null)
+            deathSource.Stop();
+
+        if (musicSource != null)
+            musicSource.UnPause();
+
+        // Change background for this level
+        ChangeBackground(level);
 
         startScreen.SetActive(false);
         videoScreen.SetActive(false);
@@ -68,7 +90,7 @@ public class GameManager : MonoBehaviour
             snakeLength = 8;
         }
 
-        snake.BeginLevel(snakeLength);
+        snake.BeginLevel(snakeLength, level);
 
         if (level == 3)
         {
@@ -76,10 +98,19 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            foodManager.BeginFood(foodNeeded);
+            foodManager.BeginFood(foodNeeded, level);
         }
 
         Debug.Log("Starting Level " + level);
+    }
+
+    // Changes the background material
+    public void ChangeBackground(int level)
+    {
+        if (level >= 1 && level <= levelBackgrounds.Length)
+        {
+            backgroundRenderer.material = levelBackgrounds[level - 1];
+        }
     }
 
     public void LevelCompleted()
@@ -88,11 +119,11 @@ public class GameManager : MonoBehaviour
 
         if (currentLevel == 1)
         {
-            PlayVideo(level1Video, false);
+            PlayVideo(level1VideoFile, false);
         }
         else if (currentLevel == 2)
         {
-            PlayVideo(level2Video, false);
+            PlayVideo(level2VideoFile, false);
         }
     }
 
@@ -100,9 +131,16 @@ public class GameManager : MonoBehaviour
     {
         foodManager.StopFood();
 
+        // Pause the main music and play the death song
+        if (musicSource != null)
+            musicSource.Pause();
+
+        if (deathSource != null)
+            deathSource.Play();
+
         if (currentLevel == 3)
         {
-            PlayVideo(finalVideo, true);
+            PlayVideo(finalVideoFile, true);
         }
         else
         {
@@ -110,7 +148,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void PlayVideo(VideoClip clip, bool isFinal)
+    void PlayVideo(string fileName, bool isFinal)
     {
         snake.StopGame();
         foodManager.StopFood();
@@ -123,9 +161,25 @@ public class GameManager : MonoBehaviour
         endScreen.SetActive(false);
 
         videoPlayer.Stop();
-        videoPlayer.clip = clip;
+
+        // Stream the video from StreamingAssets (works in WebGL)
+        videoPlayer.source = VideoSource.Url;
+        videoPlayer.url = Application.streamingAssetsPath + "/" + fileName;
         videoPlayer.isLooping = false;
-        videoPlayer.Play();
+        videoPlayer.Prepare();
+    }
+
+    // Called when the video is loaded and ready
+    void VideoPrepared(VideoPlayer player)
+    {
+        player.Play();
+    }
+
+    // If a video fails to load, log it and keep the game moving
+    void VideoError(VideoPlayer player, string message)
+    {
+        Debug.LogError("Video error: " + message);
+        VideoFinished(player);
     }
 
     void VideoFinished(VideoPlayer player)
