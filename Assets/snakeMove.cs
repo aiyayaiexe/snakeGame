@@ -9,17 +9,19 @@ public class SnakeMovement : MonoBehaviour
     public GameObject bodyPrefab;
     public int startingLength = 2;
     public int growthPerFruit = 3;
-
-    // Your Plane is 30 x 30, so its edges are at +/- 15.
     public float gridLimit = 14f;
 
+    public GameManager gameManager;
+
     private Vector3 direction = Vector3.forward;
+    private Vector3 startPosition;
     private float timer;
 
     private List<Transform> body = new List<Transform>();
     private List<Vector3> positions = new List<Vector3>();
 
     private bool gameOver = false;
+    private bool gameActive = false;
 
     public bool IsGameOver
     {
@@ -28,29 +30,18 @@ public class SnakeMovement : MonoBehaviour
 
     void Start()
     {
-        positions.Add(transform.position);
-
-        for (int i = 0; i < startingLength; i++)
-        {
-            Vector3 position = transform.position
-                + Vector3.back * gridSize * (i + 1);
-
-            GameObject segment = Instantiate(
-                bodyPrefab, position, Quaternion.identity);
-
-            body.Add(segment.transform);
-            positions.Add(position);
-        }
+        startPosition = transform.position;
+        ResetSnake(startingLength);
+        gameActive = false;
     }
 
     void Update()
     {
-        if (gameOver)
+        if (!gameActive || gameOver)
         {
             return;
         }
 
-        // Prevent turning directly backwards
         if (Input.GetKeyDown(KeyCode.UpArrow) ||
             Input.GetKeyDown(KeyCode.W))
         {
@@ -90,7 +81,6 @@ public class SnakeMovement : MonoBehaviour
         Vector3 newPosition =
             transform.position + direction * gridSize;
 
-        // Check if the head leaves the playing area
         if (Mathf.Abs(newPosition.x) > gridLimit ||
             Mathf.Abs(newPosition.z) > gridLimit)
         {
@@ -98,7 +88,6 @@ public class SnakeMovement : MonoBehaviour
             return;
         }
 
-        // Check if the head hits the body
         foreach (Transform segment in body)
         {
             if (Vector3.Distance(
@@ -109,7 +98,6 @@ public class SnakeMovement : MonoBehaviour
             }
         }
 
-        // Move the head and body
         positions.Insert(0, newPosition);
         transform.position = newPosition;
 
@@ -141,9 +129,55 @@ public class SnakeMovement : MonoBehaviour
         }
     }
 
+    public void BeginLevel(int newLength)
+    {
+        ResetSnake(newLength);
+        gameActive = true;
+    }
+
+    public void StopGame()
+    {
+        gameActive = false;
+    }
+
+    void ResetSnake(int newLength)
+    {
+        gameActive = false;
+        gameOver = false;
+        timer = 0f;
+        direction = Vector3.forward;
+
+        foreach (Transform segment in body)
+        {
+            Destroy(segment.gameObject);
+        }
+
+        body.Clear();
+        positions.Clear();
+
+        transform.position = startPosition;
+        positions.Add(startPosition);
+
+        for (int i = 0; i < newLength; i++)
+        {
+            Vector3 position = startPosition
+                + Vector3.back * gridSize * (i + 1);
+
+            GameObject segment = Instantiate(
+                bodyPrefab, position, Quaternion.identity);
+
+            body.Add(segment.transform);
+            positions.Add(position);
+        }
+    }
+
     void LoseGame(string reason)
     {
         gameOver = true;
+        gameActive = false;
+
         Debug.Log("GAME OVER! " + reason);
+
+        gameManager.SnakeDied();
     }
 }

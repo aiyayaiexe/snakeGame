@@ -5,19 +5,18 @@ public class FoodManager : MonoBehaviour
 {
     public GameObject foodPrefab;
     public SnakeMovement snake;
+    public GameManager gameManager;
+
     public int targetFood = 10;
 
     private GameObject currentFood;
     private int foodEaten = 0;
-
-    void Start()
-    {
-        SpawnFood();
-    }
+    private bool foodActive = false;
 
     void Update()
     {
-        if (currentFood == null || snake == null || snake.IsGameOver)
+        if (!foodActive || currentFood == null ||
+            snake == null || snake.IsGameOver)
         {
             return;
         }
@@ -32,7 +31,28 @@ public class FoodManager : MonoBehaviour
         }
     }
 
-    
+    public void BeginFood(int amount)
+    {
+        StopFood();
+
+        targetFood = amount;
+        foodEaten = 0;
+        foodActive = true;
+
+        SpawnFood();
+    }
+
+    public void StopFood()
+    {
+        foodActive = false;
+
+        if (currentFood != null)
+        {
+            Destroy(currentFood);
+            currentFood = null;
+        }
+    }
+
     void SpawnFood()
     {
         int x = Random.Range(-7, 8);
@@ -43,7 +63,6 @@ public class FoodManager : MonoBehaviour
         currentFood = Instantiate(
             foodPrefab, position, Quaternion.identity);
     }
-
 
     void EatFood()
     {
@@ -57,7 +76,8 @@ public class FoodManager : MonoBehaviour
 
         if (foodEaten >= targetFood)
         {
-            Debug.Log("YOU WIN!");
+            StopFood();
+            gameManager.LevelCompleted();
         }
         else
         {
