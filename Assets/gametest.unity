@@ -1581,9 +1581,9 @@ MonoBehaviour:
   diedScreen: {fileID: 410420115}
   endScreen: {fileID: 297411131}
   videoPlayer: {fileID: 1754238132}
-  level1Video: {fileID: 32900000, guid: 42c43a4a295444e9aabd8fe1c2bf9298, type: 3}
-  level2Video: {fileID: 32900000, guid: 2f3dbfe067dde4c839e3ea7a82fbe321, type: 3}
-  finalVideo: {fileID: 32900000, guid: ff9b746305f8747ea90948f6df77d76c, type: 3}
+  level1VideoFile: CutScene1_Final.mp4
+  level2VideoFile: CutScene2_Final.mp4
+  finalVideoFile: CutScene3_Final.mp4
   foodNeeded: 5
   levelBackgrounds:
   - {fileID: 2100000, guid: 24d8ef173df704fee93a767e60ec5d17, type: 2}
