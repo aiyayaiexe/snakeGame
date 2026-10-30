@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public GameObject videoScreen;
     public GameObject diedScreen;
     public GameObject endScreen;
+    public GameObject creditsScreen;
 
     public VideoPlayer videoPlayer;
 
@@ -37,6 +38,8 @@ public class GameManager : MonoBehaviour
         videoScreen.SetActive(false);
         diedScreen.SetActive(false);
         endScreen.SetActive(false);
+        creditsScreen.SetActive(false);  
+
 
         snake.StopGame();
         foodManager.StopFood();
@@ -56,6 +59,45 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         StartLevel(1);
+    }
+
+    public void ShowCredits()
+    {
+        creditsScreen.SetActive(true);
+    }
+
+    public void HideCredits()
+    {
+        creditsScreen.SetActive(false);
+    }
+
+    public void GoToTitle()
+    {
+        videoPlayer.Stop();
+        foodManager.StopFood();
+
+        // Stop the death song and bring the main music back
+        if (deathSource != null)
+            deathSource.Stop();
+
+        if (musicSource != null)
+            musicSource.UnPause();
+
+        // Reset everything back to how it is when the game first loads
+        currentLevel = 0;
+        finalVideoPlaying = false;
+        ChangeBackground(1);
+
+        snake.BeginLevel(2, 1);
+        snake.StopGame();
+
+        startScreen.SetActive(true);
+        videoScreen.SetActive(false);
+        diedScreen.SetActive(false);
+        endScreen.SetActive(false);
+
+        if (creditsScreen != null)
+            creditsScreen.SetActive(false);
     }
 
     void StartLevel(int level)
