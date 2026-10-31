@@ -2246,7 +2246,7 @@ MonoBehaviour:
   creditsScreen: {fileID: 1976078097}
   videoPlayer: {fileID: 1754238132}
   level1VideoFile: CutScene1_Final.mp4
-  level2VideoFile: CutScene2_Final.mp4
+  level2VideoFile: Cutscene2_Final.mp4
   finalVideoFile: CutScene3_Final.mp4
   foodNeeded: 5
   levelBackgrounds:
